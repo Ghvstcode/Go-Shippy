@@ -6,6 +6,7 @@ import (
 	"net"
 	"sync"
 
+	"github.com/micro/go-micro/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -55,20 +56,37 @@ func (s *service) GetConsignments(ctx context.Context, req *pb.GetRequest) (*pb.
 	consignments := s.repo.GetAll()
 	return &pb.Response{Consignments: consignments}, nil
 }
+
 func main() {
 	repo := &Repository{}
 
-	lis, err := net.Listen("tcp", port)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-	s := grpc.NewServer()
+	mService := micro.NewService(
+		micro.Name("shippy.service.consignment"),
+	)
 
-	pb.RegisterShippingServiceServer(s, &service{repo})
-	reflection.Register(s)
+	// Init will parse the command line flags.
+	mService.Init()
 
-	log.Println("Running on port:", port)
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+	if err := pb.RegisterShippingServiceHandler(mService.Server(), &service{repo}); err != nil {
+		log.Panic(err)
 	}
+
+	if err := mService.Run(); err != nil {
+		log.Panic(err)
+	}
+
+
+	//lis, err := net.Listen("tcp", port)
+	//if err != nil {
+	//	log.Fatalf("failed to listen: %v", err)
+	//}
+	//s := grpc.NewServer()
+	//
+	//pb.RegisterShippingServiceServer(s, &service{repo})
+	//reflection.Register(s)
+	//
+	//log.Println("Running on port:", port)
+	//if err := s.Serve(lis); err != nil {
+	//	log.Fatalf("failed to serve: %v", err)
+	//}
 }
