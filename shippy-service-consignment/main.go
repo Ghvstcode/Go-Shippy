@@ -32,6 +32,7 @@ func (repo *Repository) Create(consignment *pb.Consignment) (*pb.Consignment, er
 	return consignment, nil
 }
 
+//the service struct implements all the methods and is what we pass into the gRPC Registershipping server
 type service struct {
 	repo repository
 }
